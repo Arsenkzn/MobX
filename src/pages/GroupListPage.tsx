@@ -1,17 +1,41 @@
-import { memo } from "react";
-import { Col, Row } from "react-bootstrap";
 import { GroupContactsCard } from "src/components/GroupContactsCard";
-import { useGetGroupsQuery } from "src/store/reducers/group-reducer";
+import { Empty } from "src/components/Empty";
+import { ContactCard } from "src/components/ContactCard";
+import { memo } from "react";
+import { useParams } from "react-router-dom";
+import { groupsStore } from "src/store-mobx/groupsStore";
+import { Col, Row } from "react-bootstrap";
+import { contactStore } from "src/store-mobx/contactsStore";
+
 
 export const GroupListPage = memo(() => {
-  const { data: groups } = useGetGroupsQuery();
+  const { groupId } = useParams<{ groupId: string }>();
+  const groupContacts = groupsStore.all.find(({ id }) => id === groupId);
+
   return (
-    <Row xxl={4}>
-      {groups?.map((groupContacts) => (
-        <Col key={groupContacts.id}>
-          <GroupContactsCard groupContacts={groupContacts} withLink />
-        </Col>
-      ))}
+    <Row className="g-4">
+      {groupContacts ? (
+        <>
+          <Col xxl={12}>
+            <Row xxl={3}>
+              <Col className="mx-auto">
+                <GroupContactsCard groupContacts={groupContacts} />
+              </Col>
+            </Row>
+          </Col>
+          <Col>
+            <Row xxl={4} className="g-4">
+              {contactStore.all.map((contact) => (
+                <Col key={contact.id}>
+                  <ContactCard contact={contact} withLink />
+                </Col>
+              ))}
+            </Row>
+          </Col>
+        </>
+      ) : (
+        <Empty />
+      )}
     </Row>
   );
 });

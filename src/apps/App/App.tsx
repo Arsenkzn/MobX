@@ -9,8 +9,13 @@ import {
   ContactPage,
 } from "src/pages";
 import { Layout } from "src/components/Layout";
+import { contactStore } from "src/store-mobx/contactsStore";
+import { groupsStore } from "src/store-mobx/groupsStore";
 
 export const App = () => {
+  contactStore.getContacts();
+  groupsStore.getGroups();
+
   return (
     <ThemeProvider
       breakpoints={["xxxl", "xxl", "xl", "lg", "md", "sm", "xs", "xxs"]}

@@ -1,53 +1,44 @@
-import React, { memo } from "react";
+import React from "react";
 import { Col, Row } from "react-bootstrap";
 import { ContactCard } from "src/components/ContactCard";
 import { FilterForm } from "src/components/FilterForm";
-import { useAppDispatch, useAppSelector } from "src/hooks/hooks";
 import { FilterFormValues } from "src/types/common";
 import { ContactDto } from "src/types/dto/ContactDto";
-import {
-  filterByCurrentGroupId,
-  getContactByName,
-  setCurrentGroupId,
-  unsetCurrentGroupId,
-  useGetContactsQuery,
-} from "src/store/reducers/contacts";
-import { useGetGroupsQuery } from "src/store/reducers/group-reducer";
+import { contactStore } from "src/store-mobx/contactsStore";
+import { groupsStore } from "src/store-mobx/groupsStore";
+import { observer } from "mobx-react-lite";
 
-export const ContactListPage = memo(() => {
-  const { isLoading, error } = useGetContactsQuery();
-  const { filtered } = useAppSelector((state) => state.contacts);
-  const { data: groups } = useGetGroupsQuery();
-  const dispatch = useAppDispatch();
-
-
+export const ContactListPage = observer(() => {
   const onSubmit = (fv: Partial<FilterFormValues>) => {
-    
     if (fv.name) {
       const fvName = fv.name?.toLowerCase() || "";
-      dispatch(getContactByName(fvName));
-    } else dispatch(unsetCurrentGroupId());
+      contactStore.filterContactByName(fvName);
+    } else contactStore.unsetCurrentGroupId();
     if (fv.groupId && fv.groupId !== "Open this select menu") {
-      const currentGroupContacts = groups?.find(({ id }) => id === fv.groupId);
+      const currentGroupContacts = groupsStore.all.find(
+        ({ id }) => id === fv.groupId
+      );
       if (currentGroupContacts) {
-        dispatch(setCurrentGroupId(currentGroupContacts));
-        dispatch(filterByCurrentGroupId());
+        contactStore.setCurrentGroupId(currentGroupContacts);
+        contactStore.filterByCurrentGroupId();
       } else {
-        dispatch(unsetCurrentGroupId());
+        contactStore.unsetCurrentGroupId();
       }
     }
   };
 
   return (
     <>
-      {!isLoading ? (
-        !error ? (
+      {!contactStore.loading ? (
+        !contactStore.error ? (
           <Row xxl={1}>
-            <FilterForm
-              groupContactsList={groups || []}
-              initialValues={{}}
-              onSubmit={onSubmit}
-            />
+            {groupsStore.all && (
+              <FilterForm
+                groupContactsList={groupsStore.all}
+                initialValues={{}}
+                onSubmit={onSubmit}
+              />
+            )}
             <Row
               xxs={1}
               xs={1}
@@ -58,7 +49,7 @@ export const ContactListPage = memo(() => {
               xxl={4}
               className="g-4"
             >
-              {filtered.map((contact: ContactDto) => (
+              {contactStore.filtered.map((contact: ContactDto) => (
                 <Col key={contact.id}>
                   <ContactCard contact={contact} withLink />
                 </Col>
@@ -66,7 +57,7 @@ export const ContactListPage = memo(() => {
             </Row>
           </Row>
         ) : (
-          `Error: ${error}`
+          `Error: ${contactStore.error}`
         )
       ) : (
         "loading"
